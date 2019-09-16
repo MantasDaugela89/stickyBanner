@@ -1,83 +1,69 @@
+$(document).ready(function() {
+    var $banner = $('#the-target')
+    var $bannerCol = $banner.parent()
+    var $bannerRow = $banner.closest('.row')
+    var $pageContent = $bannerRow.find('.page-content')
+    var $accordion = $bannerRow.find('#accordion')
+    var navbarHeight = $('.navbar').height()
 
+    // save default values for reset
+    var defaultPosition = $banner.css('position')
+    var defaultTop = $banner.css('top')
 
+    // get position of bottom trigger line
+    function getBottomLinePosition() {
+        return $pageContent.offset().top + $pageContent.height()
+    }
 
+    // get position of top trigger line
+    function getTopLinePosition() {
+        return $accordion.offset().top + $accordion.outerHeight(true)
+    }
 
+    function stickBannerToBottom() {
+        // bottom line position of content
+        var bottomLinePosition = getBottomLinePosition()
+        // banner position is relative to it's column
+        var bannerColTopPosition = $bannerCol.offset().top
+        // calculate banner top
+        var bannerTop = bottomLinePosition - bannerColTopPosition - $banner.height()
 
+        $banner.css({ position: 'absolute', top: bannerTop })
+    }
 
+    function stickBannerToTop() {
+        $banner.css({ position: 'fixed', top: navbarHeight })
+    }
 
+    function resetBanner() {
+        $banner.css({ position: defaultPosition, top: defaultTop })
+    }
 
+    function checkBannerPosition() {
+        var scrollTop = $(window).scrollTop()
+        var topLinePosition = getTopLinePosition()
+        var bottomLinePosition = getBottomLinePosition()
 
+        var topTrigger = scrollTop + navbarHeight > topLinePosition
+        var bottomTrigger = scrollTop + $banner.height() + navbarHeight > bottomLinePosition
 
-
-$(document).ready(function(){
-
-
-    $(window).scroll(function() {
-
-        var stickyHeader = $('.navbar').height();
-
-        var banner = $('#the-target');
-
-        var bannerTop = banner.offset().top - $(window).scrollTop() - stickyHeader;
-
-        var container = banner.closest('.row');
-
-        var containerTop = container.offset().top - $(window).scrollTop();
-
-        var containerBottom = $(window).scrollTop() - container.offset().top - container.height();
-
-        var bannerContainer = $(banner).parent();
-
-        var equalPoint = containerBottom + banner.height() + stickyHeader;
-
-        alert(container.outerHeight())
-
-        if (bannerTop <= 0) {
-
-            // var banner = $('#the-target');
-
-            $(banner).css({"position": "fixed", "top": stickyHeader + "px"});
-
-            if (equalPoint >= 0)  {
-
-                // var banner = $('#the-target');
-                var columnHeight = bannerContainer.prev().height();
-
-                $(bannerContainer).css({"height": columnHeight + "px"});
-                $(banner).css({"position": "absolute", "top": "inherit", "bottom": "0px"});
-
-
-
-            } else {
-
-                $(banner).css({"position": "fixed", "top": stickyHeader + "px", "bottom": "inherit"});
-                bannerContainer.css({"height": "inherit"});
-
-                var bannerContainerTop = bannerContainer.offset().top - $(window).scrollTop();
-
-                var bannerContainerBottom = $(window).scrollTop() - bannerContainer.offset().top - bannerContainer.height();
-
-                if (bannerContainerBottom <= 0) {
-
-                    $(banner).css({"position": "relative", "bottom": "inherit", "top": "inherit"});
-
-                }
-
-
-
-            }
-
+        if (bottomLinePosition < topLinePosition + $banner.height()) {
+            resetBanner()
+        } else if (bottomTrigger) {
+            stickBannerToBottom()
+        } else if (topTrigger) {
+            stickBannerToTop()
         } else {
-            $(banner).css({"position": "relative", "bottom": "inherit", "top": "inherit"});
-
+            resetBanner()
         }
+    }
 
+    // check on document load
+    checkBannerPosition()
 
+    // check on window scroll
+    $(window).scroll(checkBannerPosition)
 
-
-
-    });
-
-
-
-});
+    // check on window resize
+    $(window).resize(checkBannerPosition)
+})
